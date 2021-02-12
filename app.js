@@ -71,6 +71,8 @@ function setQuestions() {
     const multipleOptions = document.getElementById(`question${index}`);
 
     options.forEach((element, index) => {
+      id = element.replace(/\s+/g, "") + index + Math.random() * Math.random();
+      console.log("id", id);
       const div = document.createElement("div");
       div.innerHTML = `
  <div class="form-check form-check-inline">
@@ -78,15 +80,11 @@ function setQuestions() {
       class="form-check-input"
       type="radio"
       name="choice"
-      id="${
-        element.replace(/\s+/g, "") + index + Math.random() * Math.random()
-      }"
+      id="${id}"
       value="${element}"
     />
 
-    <label class="form-check-label" for="${
-      element.replace(/\s+/g, "") + index + Math.random() * Math.random()
-    }">
+    <label class="form-check-label" for="${id}">
       ${element}
     </label>
   </div>
