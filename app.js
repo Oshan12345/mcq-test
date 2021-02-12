@@ -1,3 +1,7 @@
+let correctAnswer = 0;
+let wrongAnswer = 0;
+let skippedAnswer = 1;
+
 class Questions {
   constructor(question, options, answer) {
     (this.question = question),
@@ -9,13 +13,13 @@ class Questions {
 const a = new Questions("The average of 2,4,6", ["1", "2", "24", "6"], 6);
 const b = new Questions(
   "JavaScript is ______ Language.",
-  ["Programming", "Scripting", "Application", "None"],
+  ["Programming", "Scripting", "Application", "None", "skip"],
   "Scripting"
 );
 
 const d = new Questions(
   "Html is ______ Language.",
-  ["Mark", " Mark up", "HyperText Markup", "funny"],
+  ["Mark", " Mark up", "HyperText Markup", "funny", "skip"],
   "HyperText Markup"
 );
 
@@ -42,7 +46,7 @@ const questionSet = [
   d,
   new Questions(
     "Rose is ______ .",
-    ["flower", " fruit", "sun", "don't know"],
+    ["flower", " fruit", "sun", "don't know", "skip"],
     "flower"
   ),
 ];
@@ -74,12 +78,14 @@ function setQuestions() {
       class="form-check-input"
       type="radio"
       name="choice"
-      id="${element.replace(/\s+/g, "") + index}"
+      id="${
+        element.replace(/\s+/g, "") + index + Math.random() * Math.random()
+      }"
       value="${element}"
     />
 
     <label class="form-check-label" for="${
-      element.replace(/\s+/g, "") + index
+      element.replace(/\s+/g, "") + index + Math.random() * Math.random()
     }">
       ${element}
     </label>
@@ -102,21 +108,81 @@ function getAns() {
     }
   });
 
-  console.log(questionAnswerded);
-  // iff all the  question are answered then go for solution
+  //console.log(questionAnswerded);
+  // if all the  question are answered then go for solution
   g.forEach((element, index) => {
     if (element.checked == true && questionAnswerded == 4) {
-      const chosedOption = element.value;
-      const correctOption = questionSet[answerSerial].answer;
-      answerComparison(chosedOption, correctOption);
+      answerComparison(element, answerSerial);
       answerSerial++;
+    }
+  });
+  countingSkipOption();
+  totalMarksObtained();
+}
+
+function answerComparison(chosenAns, answerSerial) {
+  const chosedOption = chosenAns.value;
+  const correctOption = questionSet[answerSerial].answer;
+
+  chosedOption == correctOption
+    ? correctAnsStyle(chosenAns)
+    : wrongAnsStyle(chosenAns, correctOption, answerSerial);
+}
+
+function correctAnsStyle(chosenAns) {
+  correctAnswer++;
+  // console.log(chosenAns);
+  chosenAns.style.backgroundColor = "green";
+}
+
+function wrongAnsStyle(chosenAns, correctOption, answerSerial) {
+  wrongAnswer++;
+  // console.log(correctOption);
+  chosenAns.style.backgroundColor = "red";
+  giveCorrectAns(answerSerial);
+}
+
+//function for indicating correct ans in case any one select worn answer
+function giveCorrectAns(number) {
+  const g = document.getElementsByName("choice");
+  g.forEach((element, index) => {
+    if (element.checked == false) {
+      // console.log(element, " ", index);
+      const nonChosenOption = element.value;
+      const correctOption = questionSet[number].answer;
+      if (nonChosenOption == correctOption) {
+        element.style.backgroundColor = "green";
+      }
     }
   });
 }
 
-function answerComparison(chosenAns, correctAns) {
-  console.log("hi");
-  chosenAns == correctAns
-    ? console.log("ans is correct")
-    : console.log(`ans is wrong. Correct Answer is ${correctAns}`);
+function countingSkipOption() {
+  let number = 0;
+
+  const g = document.getElementsByName("choice");
+  g.forEach((element, index) => {
+    if (element.checked == true && element.value == ("skip" || "Skip")) {
+      number++;
+      // console.log(element, " ", index);
+      //   const skipOption = element.value;
+      //   if (skipOption == "skip" || skipOption == "Skip") {
+      //     console.log(skippedAnswer, "skippevvvvvvvvvvvvvvvvvvvvvvvvv");
+      //     skippedAnswer++;
+      //   }
+    }
+  });
+  skippedAnswer = number;
+}
+
+function totalMarksObtained() {
+  const markForCorrectAns = correctAnswer * 1.25;
+  const markForWrongAns = (wrongAnswer - skippedAnswer) * 0.25;
+
+  console.log(wrongAnswer - skippedAnswer, "wrong");
+  console.log(correctAnswer, "right");
+  console.log(skippedAnswer, "skipped");
+  const obtainedMarks = markForCorrectAns - markForWrongAns;
+
+  console.log("obtained marks :", obtainedMarks);
 }
