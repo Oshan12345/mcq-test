@@ -1,7 +1,7 @@
 let correctAnswer = 0;
 let wrongAnswer = 0;
-let skippedAnswer = 1;
 
+let notAnswered = 0;
 class Questions {
   constructor(question, options, answer) {
     (this.question = question),
@@ -10,177 +10,207 @@ class Questions {
   }
 }
 
-const a = new Questions("The average of 2,4,6", ["1", "2", "24", "6"], 6);
-const b = new Questions(
-  "JavaScript is ______ Language.",
-  ["Programming", "Scripting", "Application", "None", "skip"],
-  "Scripting"
+const a = new Questions(
+  "Which of the following is true about variable naming conventions in JavaScript?",
+  [
+    "You should not use any of the JavaScript reserved keyword as variable name.",
+    "JavaScript variable names should not start with a numeral (0-9).",
+
+    "Both of the above.",
+    "none",
+  ],
+  "Both of the above."
 );
 
-const d = new Questions(
+const b = new Questions(
+  "JavaScript is ______ Side Scripting Language.",
+  ["Browser", "ISP", "application", "None"],
+  "Browser"
+);
+
+const c = new Questions(
   "Html is ______ Language.",
-  ["Mark", " Mark up", "HyperText Markup", "funny", "skip"],
+  ["Mark", " Mark up", "HyperText Markup", "none"],
   "HyperText Markup"
 );
+const d = new Questions(
+  "Which built-in method calls a function for each element in the array?",
+  ["while()", "loop()", "forEach()", "none"],
+  "forEach()"
+);
+const e = new Questions(
+  "Which of the following function of Array object joins all elements of an array into a string?",
+  ["concat()", "join()", " pop()", "push()"],
+  "join()"
+);
 
-// {
-//     question: "JavaScript is ______ Language.",
-//     options: ["Programming", "Scripting", "Application", "None"],
-//     answer: "Scripting",
-//   },
-//   {
-//     question: "Python is ______ Language.",
-//     options: ["Beautiful", "complex", "Wonderful", "no one is correct"],
-//     answer: "Beautiful",
-//   },
-//   {
-//     question: "Html is ______ Language.",
-//     options: ["Mark", " Mark up", "HyperText Mark up"],
-//     answer: "HyperText Mark up",
-//   },
-
-console.log(a);
-const questionSet = [
-  a,
-  b,
-  d,
-  new Questions(
-    "Rose is ______ .",
-    ["flower", " fruit", "sun", "don't know", "skip"],
-    "flower"
-  ),
-];
+// for new question i need to change the value for "questionAnswerded" below in getAns() function
+const questionSet = [a, b, c, d, e];
 
 function setQuestions() {
-  const allQuestions = document.getElementById("all-questions");
-  //console.log(form, "ssss");
+  let elem = document.getElementById("reset-btn");
+  const previousAns = localStorage.getItem("answered");
+  const totalMarks = localStorage.getItem("marks");
+  if (previousAns != null) {
+    elem.style.display = "block";
+    let submitbtn = document.getElementById("answer-submit-btn");
+    submitbtn.style.display = "none";
+    const questionSection = document.getElementById("all-questions");
+    questionSection.innerHTML = JSON.parse(previousAns);
+    console.log(
+      (document.getElementById("result-div").innerHTML = JSON.parse(totalMarks))
+    );
+  } else {
+    let mcqId = 0;
+    const allQuestions = document.getElementById("all-questions");
 
-  questionSet.map((elem, index) => {
-    const { question, options } = elem;
-
-    let questionWithOptions = document.createElement("div");
-
-    questionWithOptions.innerHTML = `  
-   <div > 
-    <h1>${question}</h1>  
-
-    <form id="question${index}" name="my-question"></form>
+    questionSet.forEach((element, index) => {
+      const { question, options } = element;
+      let questionWithOptions = document.createElement("div");
+      questionWithOptions.innerHTML = `  
+   <div class="mt-4"> 
+    <h5 class="question">${index + 1} : ${question}</h5>  
+    <div>
+    <form id="question${index}" name="my-question" class="question-options"></form></div>
    </div>`;
+      allQuestions.appendChild(questionWithOptions);
+      const multipleOptions = document.getElementById(`question${index}`);
 
-    allQuestions.appendChild(questionWithOptions);
-    const multipleOptions = document.getElementById(`question${index}`);
+      options.forEach((element, index) => {
+        mcqId++;
 
-    options.forEach((element, index) => {
-      id = element.replace(/\s+/g, "") + index + Math.random() * Math.random();
-      console.log("id", id);
-      const div = document.createElement("div");
-      div.innerHTML = `
- <div class="form-check form-check-inline">
+        let option = element.trim();
+        // code for Capitalizing the first letter of a string
+        option = option[0].toUpperCase() + option.substring(1).toLowerCase();
+
+        let id = element.replace(/\s+/g, "") + mcqId;
+
+        multipleOptions.innerHTML += `
     <input
       class="form-check-input"
       type="radio"
       name="choice"
       id="${id}"
-      value="${element}"
-    />
-
-    <label class="form-check-label" for="${id}">
-      ${element}
+      value="${option}"
+     />
+    <label class="form-check-label " for="${id}"  style="margin-right: 10px;">
+      ${option}
     </label>
-  </div>
 `;
-      multipleOptions.appendChild(div);
+      });
     });
-  });
+    elem.style.display = "none";
+  }
 }
+
 setQuestions();
 
-function getAns() {
-  var g = document.getElementsByName("choice");
-  let answerSerial = 0;
-  // first of all I need to ensure if all questions are answered.
-  let questionAnswerded = 0;
-  g.forEach((element, index) => {
-    if (element.checked == true) {
-      questionAnswerded++;
-    }
-  });
+//function for manual and auto submit using recursive method
 
-  //console.log(questionAnswerded);
-  // if all the  question are answered then go for solution
-  g.forEach((element, index) => {
-    if (element.checked == true && questionAnswerded == 4) {
-      answerComparison(element, answerSerial);
-      answerSerial++;
-    }
-  });
-  countingSkipOption();
-  totalMarksObtained();
-}
+function autoSubmit(num = 0) {
+  let number = num;
 
-function answerComparison(chosenAns, answerSerial) {
-  const chosedOption = chosenAns.value;
-  const correctOption = questionSet[answerSerial].answer;
+  const optionSets = document.getElementsByClassName("question-options");
 
-  chosedOption == correctOption
-    ? correctAnsStyle(chosenAns)
-    : wrongAnsStyle(chosenAns, correctOption, answerSerial);
-}
+  if (number > optionSets.length - 1) {
+    let submitbtn = document.getElementById("answer-submit-btn");
 
-function correctAnsStyle(chosenAns) {
-  correctAnswer++;
-  // console.log(chosenAns);
-  chosenAns.style.backgroundColor = "green";
-}
+    submitbtn.classList.toggle("submitted");
 
-function wrongAnsStyle(chosenAns, correctOption, answerSerial) {
-  wrongAnswer++;
-  // console.log(correctOption);
-  chosenAns.style.backgroundColor = "red";
-  giveCorrectAns(answerSerial);
-}
+    const x = document.getElementById("all-questions");
 
-//function for indicating correct ans in case any one select worn answer
-function giveCorrectAns(number) {
-  const g = document.getElementsByName("choice");
-  g.forEach((element, index) => {
-    if (element.checked == false) {
-      // console.log(element, " ", index);
-      const nonChosenOption = element.value;
-      const correctOption = questionSet[number].answer;
-      if (nonChosenOption == correctOption) {
-        element.style.backgroundColor = "green";
+    localStorage.setItem("answered", JSON.stringify(x.innerHTML));
+
+    window.scroll(0, 0);
+    totalMarksObtained();
+    let elem = document.getElementById("reset-btn");
+    elem.style.display = "block";
+    return;
+  } else {
+    const perQuestionOptions = optionSets[number];
+    const correctOption = questionSet[number].answer.toLowerCase().trim();
+
+    for (let i = 0; i < perQuestionOptions.length; i++) {
+      const element = perQuestionOptions[i];
+      const nonChoosedOptions = element.value.toLowerCase().trim();
+
+      if (
+        element.checked === true &&
+        element.value.toLowerCase().trim() !== correctOption
+      ) {
+        wrongAnswer += 1;
+        element.style.backgroundColor = "#FF0000";
+      }
+
+      if (
+        element.checked === true &&
+        element.value.toLowerCase().trim() === correctOption
+      ) {
+        correctAnswer++;
+        element.style.backgroundColor = "#5EFF33";
+      } else if (
+        element.checked === false &&
+        correctOption === nonChoosedOptions
+      ) {
+        element.style.backgroundColor = "blue";
+        notAnswered++;
       }
     }
-  });
-}
-
-function countingSkipOption() {
-  let number = 0;
-
-  const g = document.getElementsByName("choice");
-  g.forEach((element, index) => {
-    if (element.checked == true && element.value == ("skip" || "Skip")) {
-      number++;
-      // console.log(element, " ", index);
-      //   const skipOption = element.value;
-      //   if (skipOption == "skip" || skipOption == "Skip") {
-      //     console.log(skippedAnswer, "skippevvvvvvvvvvvvvvvvvvvvvvvvv");
-      //     skippedAnswer++;
-      //   }
-    }
-  });
-  skippedAnswer = number;
+    autoSubmit((number += 1));
+  }
 }
 
 function totalMarksObtained() {
   const markForCorrectAns = correctAnswer * 1.25;
-  const markForWrongAns = (wrongAnswer - skippedAnswer) * 0.25;
-
-  console.log(wrongAnswer - skippedAnswer, "wrong");
-  console.log(correctAnswer, "right");
-  console.log(skippedAnswer, "skipped");
-  const obtainedMarks = markForCorrectAns - markForWrongAns;
-
-  console.log("obtained marks :", obtainedMarks);
+  const markForWrongAns = wrongAnswer * 0.25;
+  const obtainedMark = markForCorrectAns - markForWrongAns;
+  document.getElementById("right").innerText = correctAnswer;
+  document.getElementById("wrong").innerText = wrongAnswer;
+  document.getElementById("marks-obtained").innerText = obtainedMark;
+  const result = document.getElementById("result-div");
+  localStorage.setItem("marks", JSON.stringify(result.innerHTML));
 }
+
+//function for displaying time
+const displayTime = () => {
+  let today = new Date();
+  let h = today.getHours();
+  let m = today.getMinutes();
+  let s = today.getSeconds();
+  let amPm = h;
+  h = h % 12;
+  h = h ? h : 12; // the hour '0' should be '12'
+  document.getElementById("display-time").innerHTML =
+    h + ":" + m + ":" + s + " " + (amPm >= 12 ? "PM" : "AM");
+};
+
+const reset = (id) => {
+  let elem = document.getElementById(id);
+  elem.style.display = "none";
+  localStorage.removeItem("answered");
+  const questionSection = document.getElementById("all-questions");
+  questionSection.innerHTML = "";
+  document.getElementById("result-div").innerHTML = "";
+  setQuestions();
+  window.location.reload();
+};
+
+window.onload = () => {
+  //this function is for submitting answer automatically after certain time. Can be used if necessary
+  // const previousAns = localStorage.getItem("answered");
+  // const submitbtn = document.getElementById("answer-submit-btn");
+  // const classItems = submitbtn.classList;
+  // //after 2 minutes answer will be submitted automatically
+  // if (previousAns == null) {
+  //   setTimeout(() => {
+  //     if (classItems.contains("submitted") != true) {
+  //       autoSubmit();
+  //       submitbtn.style.display = "none";
+  //       console.log("answer is auto submitted");
+  //     }
+  //   }, 200000);
+  // }
+
+  //this function is for updating time automatically
+  setInterval(displayTime, 500);
+};
